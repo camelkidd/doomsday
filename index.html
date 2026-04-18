@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doomsday Trainer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <section id="screen-difficulty" class="screen">
+            <h1>Doomsday Trainer</h1>
+            <p>Select your difficulty:</p>
+            <button onclick="selectDifficulty('easy')">Easy</button>
+            <button onclick="selectDifficulty('medium')">Medium</button>
+            <button onclick="selectDifficulty('hard')">Hard</button>
+        </section>
+
+        <section id="screen-settings" class="screen hidden">
+            <h2 style="font-size: 2.5rem;">Game Settings</h2>
+            
+            <div class="settings-group">
+                <label style="font-size: 1.5rem;">Number of Questions: <span id="q-val">5</span></label>
+                <input type="range" id="q-count" min="1" max="20" value="5" oninput="document.getElementById('q-val').innerText = this.value">
+            </div>
+            
+            <div id="century-selection" class="vertical-stack">
+                <label class="custom-checkbox">
+                    <input type="checkbox" value="1700">
+                    <span class="checkmark"></span> 18th Century (1700s)
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" value="1800">
+                    <span class="checkmark"></span> 19th Century (1800s)
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" value="1900" checked>
+                    <span class="checkmark"></span> 20th Century (1900s)
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" value="2000" checked>
+                    <span class="checkmark"></span> 21st Century (2000s)
+                </label>
+                <label class="custom-checkbox sub-option" id="present-only-container">
+                    <input type="checkbox" id="toggle-present-only" checked>
+                    <span class="checkmark"></span> Limit 2000s to present date
+                </label>
+                <label class="custom-checkbox disabled-option" id="label-2100">
+                    <input type="checkbox" value="2100" id="check-2100">
+                    <span class="checkmark"></span> 22nd Century (2100s)
+                </label>
+            </div>
+
+            <div class="actions">
+                <button onclick="startGame()" class="btn-large">Start Game</button>
+                <button onclick="showScreen('screen-difficulty')" class="btn-secondary" style="font-size: 1.2rem;">Cancel</button>
+            </div>
+        </section>
+
+        <section id="screen-game" class="screen hidden">
+            <h1 id="current-date-display"></h1>
+            
+            <div id="scratchpad-area" class="horizontal-stack"></div>
+
+            <div class="final-container">
+                <div class="input-block">
+                    <label>Final Answer</label>
+                    <input type="text" id="final-answer" placeholder="Enter day...">
+                </div>
+                <button id="btn-submit" onclick="submitAnswer()" class="btn-large">Submit (enter)</button>
+            </div>
+
+            <div class="game-footer">
+                <button id="btn-quit" onclick="confirmQuit()">Quit Game</button>
+                <div id="question-counter">Question: 1 / 5</div>
+            </div>
+        </section>
+
+        <div id="modal-quit" class="modal hidden">
+            <div class="modal-content fade-in">
+                <h2>Quit Game?</h2>
+                <p>Your progress will be lost.</p>
+                <div class="modal-actions">
+                    <button onclick="location.reload()" class="btn-danger">Yes, Quit</button>
+                    <button onclick="closeQuitModal()" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="modal-feedback" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="feedback-text"></h2>
+                <button onclick="toggleBreakdown()" class="btn-secondary">Show/Hide Solution</button>
+                <div id="breakdown-container" class="hidden"></div>
+                <hr>
+                <div class="modal-actions">
+                    <button id="btn-continue" onclick="nextQuestion()">Continue</button>
+                    <button id="btn-retry" onclick="retryQuestion()">Retry</button>
+                </div>
+            </div>
+        </div>
+
+        <section id="screen-results" class="screen hidden">
+            <h2>Game Over</h2>
+            <p id="final-score"></p>
+            <button onclick="location.reload()">Play Again (enter)</button>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
