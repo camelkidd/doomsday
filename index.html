@@ -88,15 +88,23 @@
         </div>
         
         <div id="modal-feedback" class="modal hidden">
-            <div class="modal-content">
+            <div class="modal-content" id="feedback-content" style="position: relative;">
+                <button id="btn-review-x" onclick="toggleReviewMode()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: #777; cursor: pointer;">&times;</button>
+                
                 <h2 id="feedback-text"></h2>
                 <button onclick="toggleBreakdown()" class="btn-secondary">Show/Hide Solution</button>
                 <div id="breakdown-container" class="hidden"></div>
                 <hr>
-                <div class="modal-actions">
+                <div class="modal-actions" id="standard-actions">
                     <button id="btn-continue" onclick="nextQuestion()">Continue</button>
                     <button id="btn-retry" onclick="retryQuestion()">Retry</button>
+                    <button id="btn-override" onclick="overrideScore()" class="btn-secondary" style="background: #8b4513;">Override</button>
                 </div>
+            </div>
+
+            <div id="review-actions" class="hidden" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 120;">
+                <button onclick="toggleReviewMode()" class="btn-large">Return to Results</button>
+                <button id="btn-override-review" onclick="overrideScore()" class="btn-secondary" style="background: #8b4513; font-size: 1.2rem; padding: 1rem 2rem;">Override</button>
             </div>
         </div>
 

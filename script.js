@@ -75,6 +75,7 @@ function generateRandomDate(centuries) {
 
 function loadQuestion() {
     gameState.wasRetried = false;
+    gameState.wasCorrectedByOverride = false;
     document.getElementById('question-counter').innerText = 
         `Question: ${gameState.currentIndex + 1} / ${gameState.questions.length}`;
 
@@ -185,55 +186,63 @@ function submitAnswer() {
     const correctDayName = dayNames[targets.final];
     const isCorrect = userText.trim().toLowerCase() === correctDayName.toLowerCase();
     
-    // Scratchpad visual feedback
-    const inputs = document.querySelectorAll('#scratchpad-area input');
-    inputs.forEach(input => {
-        const val = parseInt(input.value);
-        const label = input.closest('.input-block').querySelector('label').innerText.toLowerCase();
-        let target = null;
-        if (label.includes('12\'s')) target = targets.x12;
-        else if (label.includes('remainder')) target = targets.n;
-        else if (label.includes('4s')) target = targets.leaps;
-        else if (label.includes('century')) target = targets.centuryAnchor;
-        else if (label.includes('day/month')) target = targets.dayMonth;
-        if (!isNaN(val)) input.style.borderColor = (val === target) ? "#4caf50" : "#f44336";
-    });
-
-    const sum = targets.centuryAnchor + targets.x12 + targets.n + targets.leaps + targets.dayMonth;
-    document.getElementById('breakdown-container').innerHTML = `
-        <div class="breakdown-box">
-            <strong>Solution Breakdown:</strong><br>
-            ${targets.centuryAnchor} (Anchor) + ${targets.x12} (12\'s) + ${targets.n} (Rem) + ${targets.leaps} (4s) + ${targets.dayMonth} (D/M)<br>
-            Total: ${sum} → <strong>${correctDayName}</strong>
-        </div>`;
-    document.getElementById('breakdown-container').classList.remove('hidden');
-
+    // Define elements to avoid "Uncaught ReferenceError"
+    const overrideBtn = document.getElementById('btn-override');
+    const retryBtn = document.getElementById('btn-retry');
+    const breakdown = document.getElementById('breakdown-container');
     const feedbackText = document.getElementById('feedback-text');
+
+    breakdown.innerHTML = `
+        <div class="breakdown-box">
+            <strong>Target:</strong> ${correctDayName}<br>
+            <strong>Century Anchor:</strong> ${targets.centuryAnchor}<br>
+            <strong>Year Calc:</strong> (12s: ${targets.x12}) + (Rem: ${targets.n}) + (Leaps: ${targets.leaps})<br>
+            <strong>Month Offset:</strong> ${targets.dayMonth}<br>
+            <em>Formula: (Anchor + 12s + Rem + Leaps + MonthOffset) mod 7</em>
+        </div>
+    `;
+    
+    // Reset visibility logic
+    overrideBtn.style.display = 'inline-block';
+    retryBtn.style.display = 'inline-block';
+
     if (isCorrect) {
         feedbackText.innerText = "Correct!";
         feedbackText.style.color = "#4caf50";
+        breakdown.classList.remove('hidden'); // Auto-show solution
+        overrideBtn.style.display = 'none';    // Hide override
+        retryBtn.style.display = 'none';       // Hide retry
         
-        // LOGIC FIX: 
-        // If it's a first-time success, increment primary score.
-        // If it's a retry success, only increment corrected score.
         if (!gameState.wasRetried) {
             gameState.score++;
             gameState.correctedScore++;
         } else {
             gameState.correctedScore++;
         }
-        
-        document.getElementById('btn-retry').classList.add('hidden');
     } else {
         feedbackText.innerText = `Incorrect. It was ${correctDayName}.`;
         feedbackText.style.color = "#f44336";
-        document.getElementById('btn-retry').classList.remove('hidden');
+        breakdown.classList.add('hidden'); // Hide solution by default
     }
+    
     document.getElementById('modal-feedback').classList.remove('hidden');
 }
 
-function toggleBreakdown() { 
-    document.getElementById('breakdown-container').classList.toggle('hidden'); 
+function toggleBreakdown() {
+    const breakdown = document.getElementById('breakdown-container');
+    const retryBtn = document.getElementById('btn-retry');
+    const overrideBtn = document.getElementById('btn-override');
+    const feedbackText = document.getElementById('feedback-text').innerText;
+    breakdown.classList.toggle('hidden');
+
+    // Only hide buttons if the user is currently in an "Incorrect" state
+    // (If they overridden to correct, we don't need to hide 'Continue')
+    const isCurrentlyIncorrect = feedbackText.toLowerCase().includes("incorrect");
+
+    if (!breakdown.classList.contains('hidden') && isCurrentlyIncorrect) {
+        if (retryBtn) retryBtn.style.display = 'none';
+        if (overrideBtn) overrideBtn.style.display = 'none';
+    }
 }
 
 function retryQuestion() { 
@@ -268,4 +277,50 @@ function confirmQuit() {
 
 function closeQuitModal() { 
     document.getElementById('modal-quit').classList.add('hidden'); 
+}
+
+function toggleReviewMode() {
+    const modal = document.getElementById('modal-feedback');
+    const content = document.getElementById('feedback-content');
+    const reviewActions = document.getElementById('review-actions');
+    
+    const isEnteringReview = !content.classList.contains('invisible');
+
+    if (isEnteringReview) {
+        // Hiding the feedback box
+        content.classList.add('invisible');
+        modal.classList.add('clear-bg'); // This now allows clicking the Quit button
+        reviewActions.classList.remove('hidden');
+    } else {
+        // Returning to the results box
+        content.classList.remove('invisible');
+        modal.classList.remove('clear-bg');
+        reviewActions.classList.add('hidden');
+    }
+}
+
+function overrideScore() {
+    if (gameState.wasCorrectedByOverride) return;
+
+    gameState.score++;
+    gameState.correctedScore++;
+    gameState.wasCorrectedByOverride = true;
+
+    const feedbackText = document.getElementById('feedback-text');
+    feedbackText.innerText = "Correct (Overridden)";
+    feedbackText.style.color = "#4caf50";
+    
+    // UI Cleanup: Hide buttons that no longer make sense
+    document.getElementById('btn-retry').style.display = 'none';
+    document.getElementById('btn-override').style.display = 'none';
+    const revOverride = document.getElementById('btn-override-review');
+    if (revOverride) revOverride.style.display = 'none';
+    
+    // Auto-show the solution (since it's now 'Correct')
+    document.getElementById('breakdown-container').classList.remove('hidden');
+
+    // If they were in review mode (box was invisible), bring them back to see the update
+    if (document.getElementById('feedback-content').classList.contains('invisible')) {
+        toggleReviewMode();
+    }
 }
