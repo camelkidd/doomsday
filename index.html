@@ -11,9 +11,9 @@
         <section id="screen-difficulty" class="screen">
             <h1>Doomsday Trainer</h1>
             <p>Select your difficulty:</p>
-            <button onclick="selectDifficulty('easy')">Easy</button>
-            <button onclick="selectDifficulty('medium')">Medium</button>
-            <button onclick="selectDifficulty('hard')">Hard</button>
+            <button onclick="selectDifficulty('easy')">Easy (1)</button>
+            <button onclick="selectDifficulty('medium')">Medium (2)</button>
+            <button onclick="selectDifficulty('hard')">Hard (3)</button>
         </section>
 
         <section id="screen-settings" class="screen hidden">
@@ -52,8 +52,8 @@
             </div>
 
             <div class="actions">
-                <button onclick="startGame()" class="btn-large">Start Game</button>
-                <button onclick="showScreen('screen-difficulty')" class="btn-secondary" style="font-size: 1.2rem;">Cancel</button>
+                <button onclick="startGame()" class="btn-large" id="starter">Start Game (Enter)</button>
+                <button onclick="showScreen('screen-difficulty')" class="btn-secondary" style="font-size: 1.2rem;">Cancel (Esc)</button>
             </div>
         </section>
 
@@ -67,12 +67,15 @@
                     <label>Final Answer</label>
                     <input type="text" id="final-answer" placeholder="Enter day...">
                 </div>
-                <button id="btn-submit" onclick="submitAnswer()" class="btn-large">Submit (enter)</button>
+                <button id="btn-submit" onclick="submitAnswer()" class="btn-large">Submit (Enter)</button>
             </div>
 
             <div class="game-footer">
-                <button id="btn-quit" onclick="confirmQuit()">Quit Game</button>
-                <div id="question-counter">Question: 1 / 5</div>
+                <button id="btn-quit" onclick="confirmQuit()">Quit Game (Esc)</button>
+                <div class="counter-container" style="text-align: right;">
+                    <div id="attempt-counter" class="counter">Attempt: 1 / 3</div>
+                    <div id="question-counter" class="counter">Question: 1 / 5</div>
+                </div>
             </div>
         </section>
 
@@ -81,8 +84,18 @@
                 <h2>Quit Game?</h2>
                 <p>Your progress will be lost.</p>
                 <div class="modal-actions">
-                    <button onclick="location.reload()" class="btn-danger">Yes, Quit</button>
-                    <button onclick="closeQuitModal()" class="btn-secondary">Cancel</button>
+                    <button onclick="location.reload()" class="btn-danger">Yes, Quit (Enter)</button>
+                    <button onclick="closeQuitModal()" class="btn-secondary">Cancel (Esc)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-alert" class="modal hidden">
+            <div class="modal-content fade-in">
+                <h2 style="color: #ff5555;">Hold on!</h2>
+                <p id="alert-message">Please select at least one century to continue.</p>
+                <div class="modal-actions">
+                    <button onclick="closeAlert()" class="btn-large">Got it (Enter)</button>
                 </div>
             </div>
         </div>
@@ -92,12 +105,12 @@
                 <button id="btn-review-x" onclick="toggleReviewMode()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: #777; cursor: pointer;">&times;</button>
                 
                 <h2 id="feedback-text"></h2>
-                <button onclick="toggleBreakdown()" class="btn-secondary">Show/Hide Solution</button>
+                <button onclick="toggleBreakdown()" class="btn-secondary" id="btn-toggle-solution">Show Solution (Tab)</button>
                 <div id="breakdown-container" class="hidden"></div>
                 <hr>
                 <div class="modal-actions" id="standard-actions">
-                    <button id="btn-continue" onclick="nextQuestion()">Continue</button>
-                    <button id="btn-retry" onclick="retryQuestion()">Retry</button>
+                    <button id="btn-continue" onclick="nextQuestion()">Continue (Enter)</button>
+                    <button id="btn-retry" onclick="retryQuestion()">Retry (Space)</button>
                     <button id="btn-override" onclick="overrideScore()" class="btn-secondary" style="background: #8b4513;">Override</button>
                 </div>
             </div>
@@ -111,7 +124,7 @@
         <section id="screen-results" class="screen hidden">
             <h2>Game Over</h2>
             <p id="final-score"></p>
-            <button onclick="location.reload()">Play Again (enter)</button>
+            <button onclick="location.reload()">Play Again (Enter)</button>
         </section>
     </div>
     <script src="script.js"></script>

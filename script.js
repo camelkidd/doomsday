@@ -6,7 +6,8 @@ let gameState = {
     correctedScore: 0,
     wasRetried: false,
     anyRetriesUsed: false,
-    currentBreakdown: ""
+    currentBreakdown: "",
+    attempts: 0
 };
 
 const screens = ['screen-difficulty', 'screen-settings', 'screen-game', 'screen-results'];
@@ -23,7 +24,10 @@ function selectDifficulty(mode) {
 
 function startGame() {
     const checkboxes = document.querySelectorAll('#century-selection input:checked:not(#toggle-present-only)');
-    if (checkboxes.length === 0) return alert("Select at least one century!");
+    if (checkboxes.length === 0) {
+        showAlert("Select at least one century!");
+        return;
+    }
 
     const count = parseInt(document.getElementById('q-count').value);
     const centuries = Array.from(checkboxes).map(cb => parseInt(cb.value));
@@ -75,10 +79,11 @@ function generateRandomDate(centuries) {
 
 function loadQuestion() {
     gameState.wasRetried = false;
+    gameState.attempts = 0;
     gameState.wasCorrectedByOverride = false;
-    document.getElementById('question-counter').innerText = 
-        `Question: ${gameState.currentIndex + 1} / ${gameState.questions.length}`;
-
+    document.getElementById('attempt-counter').innerText = `Attempt: 1 / 3`;
+    document.getElementById('question-counter').innerText = `Question: ${gameState.currentIndex + 1} / ${gameState.questions.length}`;
+    
     const finalInput = document.getElementById('final-answer');
     finalInput.value = "";
     finalInput.style.borderColor = "#555"; 
@@ -155,13 +160,103 @@ window.addEventListener('keydown', function(e) {
         const feedbackModal = document.getElementById('modal-feedback');
         const quitModal = document.getElementById('modal-quit');
         const resultsScreen = document.getElementById('screen-results');
-        if (!feedbackModal.classList.contains('hidden')) {
+        const settings = document.getElementById('screen-settings');
+        const game = document.getElementById('screen-game');
+
+        if (!document.getElementById('modal-alert').classList.contains('hidden')){
+            closeAlert();
+        } else if (!feedbackModal.classList.contains('hidden')) {
             nextQuestion();
-        } else if (quitModal.classList.contains('hidden') && !document.getElementById('screen-game').classList.contains('hidden')) {
+        } else if (quitModal.classList.contains('hidden') && !game.classList.contains('hidden')) {
             submitAnswer();
         } else if (!resultsScreen.classList.contains('hidden')){
             e.preventDefault(); 
             location.reload();
+        } else if (!settings.classList.contains('hidden')) {
+            startGame();
+        } else if (!quitModal.classList.contains('hidden')) {
+            location.reload();
+        }
+    }
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === '1') {
+        selectDifficulty('easy');
+    } else if (e.key === '2') {
+        selectDifficulty('medium');
+    } else if (e.key === '3') {
+        selectDifficulty('hard');
+    }
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const settings = document.getElementById('screen-settings');
+        const game = document.getElementById('screen-game');
+        const quitModal = document.getElementById('modal-quit')
+        const feedback = document.getElementById('modal-feedback')
+        if (!settings.classList.contains('hidden')) {
+            showScreen('screen-difficulty');
+        } else if (quitModal.classList.contains('hidden') && !game.classList.contains('hidden') && feedback.classList.contains('hidden')) {
+            confirmQuit();
+        } else if (!quitModal.classList.contains('hidden')) {
+            closeQuitModal();
+        } else if (!feedback.classList.contains('hidden')) {
+            toggleReviewMode();
+        }
+    }
+
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === ' ' || e.code === 'Space') {
+        const feedbackModal = document.getElementById('modal-feedback');
+        const resultsScreen = document.getElementById('screen-results');
+        const feedbackTextElement = document.getElementById('feedback-text');
+        const settings = document.getElementById('screen-settings');
+        const quitModal = document.getElementById('modal-quit');
+
+        // 1. If we are on the settings screen, start the game
+        if (!settings.classList.contains('hidden')) {
+            e.preventDefault();
+            startGame();
+        }
+        // 2. If the feedback modal is open
+        else if (feedbackModal && !feedbackModal.classList.contains('hidden')) {
+            e.preventDefault();
+            const feedbackText = feedbackTextElement.innerText.toLowerCase();
+            const isIncorrect = feedbackText.includes("incorrect");
+
+            // If incorrect AND they have retries left: Retry
+            if (isIncorrect && gameState.attempts < 3 && !feedbackText.includes("overridden")) {
+                retryQuestion();
+            } 
+            // If they are correct, overridden, or out of attempts: Continue
+            else {
+                nextQuestion();
+            }
+        } 
+        // 3. If the game is over, reload/restart
+        else if (!resultsScreen.classList.contains('hidden')) {
+            e.preventDefault();
+            location.reload();
+        }
+        // 4. If the quit screen is up, quit the game
+        else if (!quitModal.classList.contains('hidden')) {
+            this.location.reload();
+        }
+    }
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+        const feedback = document.getElementById('modal-feedback');
+        const content = document.getElementById('feedback-content')
+
+        if (!feedback.classList.contains('hidden') && !content.classList.contains('invisible')) {
+            e.preventDefault();
+            toggleBreakdown();
         }
     }
 });
@@ -180,13 +275,18 @@ document.getElementById('toggle-present-only').addEventListener('change', functi
 });
 
 function submitAnswer() {
+    gameState.attempts++;
+    
+    // Update the visual attempt counter immediately
+    document.getElementById('attempt-counter').innerText = `Attempt: ${gameState.attempts} / 3`;
+
     const date = gameState.questions[gameState.currentIndex];
     const targets = getDoomsdayComponents(date);
-    const userText = document.getElementById('final-answer').value;
+    const finalInput = document.getElementById('final-answer');
+    const userText = finalInput.value;
     const correctDayName = dayNames[targets.final];
     const isCorrect = userText.trim().toLowerCase() === correctDayName.toLowerCase();
     
-    // Define elements to avoid "Uncaught ReferenceError"
     const overrideBtn = document.getElementById('btn-override');
     const retryBtn = document.getElementById('btn-retry');
     const breakdown = document.getElementById('breakdown-container');
@@ -209,9 +309,10 @@ function submitAnswer() {
     if (isCorrect) {
         feedbackText.innerText = "Correct!";
         feedbackText.style.color = "#4caf50";
-        breakdown.classList.remove('hidden'); // Auto-show solution
-        overrideBtn.style.display = 'none';    // Hide override
+        breakdown.classList.remove('hidden'); 
+        overrideBtn.style.display = 'none';    // Hide override only when correct
         retryBtn.style.display = 'none';       // Hide retry
+        document.getElementById('btn-toggle-solution').innerText = "Hide Solution (Tab)";
         
         if (!gameState.wasRetried) {
             gameState.score++;
@@ -220,9 +321,27 @@ function submitAnswer() {
             gameState.correctedScore++;
         }
     } else {
-        feedbackText.innerText = `Incorrect. It was ${correctDayName}.`;
-        feedbackText.style.color = "#f44336";
-        breakdown.classList.add('hidden'); // Hide solution by default
+        // Clear the input field for the next attempt
+        finalInput.value = ""; 
+
+        if (gameState.attempts < 3) {
+            feedbackText.innerText = `Incorrect.`;
+            feedbackText.style.color = "#f44336";
+            breakdown.classList.add('hidden'); 
+            document.getElementById('btn-toggle-solution').innerText = "Show Solution (Tab)";
+            
+            retryBtn.style.display = 'inline-block';
+            overrideBtn.style.display = 'inline-block';
+        } else {
+            feedbackText.innerText = `Incorrect. It was ${correctDayName}.`;
+            feedbackText.style.color = "#f44336";
+            breakdown.classList.add('hidden'); 
+            document.getElementById('btn-toggle-solution').innerText = "Show Solution (Tab)";
+
+            retryBtn.style.display = 'none';
+            // Override button remains visible here because we removed the line hiding it
+            overrideBtn.style.display = 'inline-block'; 
+        }
     }
     
     document.getElementById('modal-feedback').classList.remove('hidden');
@@ -232,16 +351,27 @@ function toggleBreakdown() {
     const breakdown = document.getElementById('breakdown-container');
     const retryBtn = document.getElementById('btn-retry');
     const overrideBtn = document.getElementById('btn-override');
+    const toggleBtn = document.getElementById('btn-toggle-solution');
     const feedbackText = document.getElementById('feedback-text').innerText;
+    
     breakdown.classList.toggle('hidden');
 
-    // Only hide buttons if the user is currently in an "Incorrect" state
-    // (If they overridden to correct, we don't need to hide 'Continue')
+    if (breakdown.classList.contains('hidden')) {
+        toggleBtn.innerText = "Show Solution (Tab)";
+    } else {
+        toggleBtn.innerText = "Hide Solution (Tab)";
+    }
+
     const isCurrentlyIncorrect = feedbackText.toLowerCase().includes("incorrect");
 
+    // We only hide the Retry button when the solution is shown to prevent cheating,
+    // but we no longer hide the Override button.
     if (!breakdown.classList.contains('hidden') && isCurrentlyIncorrect) {
         if (retryBtn) retryBtn.style.display = 'none';
-        if (overrideBtn) overrideBtn.style.display = 'none';
+        // overrideBtn remains visible
+    } else if (breakdown.classList.contains('hidden') && isCurrentlyIncorrect && gameState.attempts < 3) {
+        // Bring Retry back if they hide the solution and still have attempts
+        if (retryBtn) retryBtn.style.display = 'inline-block';
     }
 }
 
@@ -249,6 +379,7 @@ function retryQuestion() {
     gameState.wasRetried = true; 
     gameState.anyRetriesUsed = true; // Flag that a retry occurred
     document.getElementById('modal-feedback').classList.add('hidden'); 
+    document.getElementById('attempt-counter').innerText = `Attempt: ${gameState.attempts + 1} / 3`
     document.getElementById('final-answer').focus();
 }
 
@@ -323,4 +454,13 @@ function overrideScore() {
     if (document.getElementById('feedback-content').classList.contains('invisible')) {
         toggleReviewMode();
     }
+}
+
+function showAlert(message) {
+    document.getElementById('alert-message').innerText = message;
+    document.getElementById('modal-alert').classList.remove('hidden');
+}
+
+function closeAlert() {
+    document.getElementById('modal-alert').classList.add('hidden');
 }

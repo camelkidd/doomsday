@@ -96,7 +96,7 @@ button:hover { background: #555; }
 }
 #btn-quit:hover { transform: scale(1.1); background: rgba(255, 85, 85, 0.1); }
 
-#question-counter { font-size: 1.2rem; font-weight: bold; color: #888; }
+.counter { font-size: 1.2rem; font-weight: bold; color: #888; }
 
 .breakdown-box { background: #1a1a1a; border-left: 4px solid #00bcd4; padding: 1rem; margin: 1rem 0; font-family: monospace; text-align: left; }
 
