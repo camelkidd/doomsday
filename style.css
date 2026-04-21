@@ -50,8 +50,6 @@ body {
 }
 .custom-checkbox input:checked ~ .checkmark:after { display: block; }
 
-.modal-content { background: #333; padding: 3rem; border-radius: 8px; text-align: center; max-width: 600px; width: 90%; }
-
 .hidden { display: none !important; }
 
 h1 { font-size: 3rem; margin-bottom: 2rem; color: #00bcd4; }
@@ -86,8 +84,6 @@ button:hover { background: #555; }
 .btn-large { font-size: 1.2rem; padding: 1rem 2rem; background: #008cba; border: none; color: white; cursor: pointer; transition: all 0.2s;}
 .btn-danger { background: #b33939; border: none; }
 
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; }
-
 .game-footer {
     position: absolute; bottom: 20px; left: 0; right: 0; padding: 0 40px;
     display: flex; justify-content: space-between; align-items: center;
@@ -115,3 +111,90 @@ button:hover { background: #555; }
 .invisible { visibility: hidden !important; pointer-events: none !important; }
 .clear-bg { background: rgba(0,0,0,0) !important; pointer-events: none !important; }
 #review-actions { pointer-events: auto !important; }
+
+#review-actions button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+#btn-override-review:hover, #btn-override:hover {
+    background: #a0522d !important; /* A slightly lighter sienna/orange */
+    box-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
+}
+
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.tutorial-section {
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-section h3 {
+    color: #4caf50;
+    margin-bottom: 0.5rem;
+}
+
+.tutorial-section ul {
+    padding-left: 20px;
+}
+
+.tutorial-section li {
+    margin-bottom: 8px;
+}
+
+/* Ensure the secondary buttons (like How to Play) have a consistent hover effect */
+.btn-secondary:hover {
+    background: #555 !important;
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+/* Specific styling for the Tutorial Start button to match the Override button's theme */
+.btn-tutorial-start {
+    background: #8b4513 !important; /* Burnt Sienna base */
+    border: none !important;
+}
+
+.btn-tutorial-start:hover {
+    background: #a0522d !important; /* Lighter Sienna hover */
+    box-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
+    transform: scale(1.05);
+    transition: all 0.2s;
+}
+
+/* Ensure the tutorial content has smooth scrolling and clean scrollbars */
+.modal-content {
+    background: #333;
+    padding: 2rem;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    
+    /* Ensure this is the scrollable container */
+    max-height: 80vh; 
+    overflow-y: auto; 
+    scroll-behavior: auto !important; /* Prevents smooth scroll from fighting the reset */
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #00bcd4;
+}
